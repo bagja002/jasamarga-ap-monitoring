@@ -1,11 +1,12 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import { styled } from "@mui/material/styles";
 import Select from "../../src/app/component/tools/select";
 import Sidebar from "../../src/app/component/sidebar";
 import Chart1 from "../../src/app/component/grafik/grafikdonat";
-import DoughnutChart from "../../src/app/component/grafik/grafikdonat";
+import GrafikImpor from "../../src/app/component/grafik/grafik3";
+import GrafikTKDN from "../../src/app/component/grafik/grafik2";
 import DenseTable from "../admin/dashboardres";
 import Navbar from "../../src/app/component/navbar";
 import { useRouter } from "next/router";
@@ -85,8 +86,9 @@ const LayerGrafik1 = styled("div")({
   alignItems: `flex-start`,
   padding: `0px`,
   boxSizing: `border-box`,
-  width: `250px`, // 378px / 1920px * 100%
-  height: `250px`, // 301px / 1080px * 100%
+  width: `400px`, // 378px / 1920px * 100%
+  height: `250px`, // 301px / 1080px * 100%\
+  textAlign:"center" // 301px / 1080px * 100%
 });
 
 const styles = {
@@ -139,7 +141,7 @@ function DashboardNew() {
   const fetchData = async () => {
     try {
       const axiosInstance = axios.create({
-        baseURL: "http://127.0.0.1:4000",
+        baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
         headers: {
           Authorization: `Bearer ${tokenjwt}`,
         },
@@ -163,7 +165,7 @@ function DashboardNew() {
   fetchData();
 }, [navigate, selectedValue]);
 
-  console.log(data);
+
   
 
    //mengambil data Semua AP
@@ -173,7 +175,7 @@ function DashboardNew() {
 
       try{
         const axiosInstance = axios.create({
-          baseURL: "http://127.0.0.1:4000",
+          baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -181,17 +183,19 @@ function DashboardNew() {
 
         const response = await axiosInstance.get('admin/all_user')
 
-        setDataAp(response.data.data.map((item) => ({
+      setDataAp(
+        response.data.data.map((item) => ({
           id: item.IdUser,
           name: item.NamaAP,
-        })))
-
+        }))
+        )
       }catch(error){
-        console.error("Terjadi kesalahan:", error);
+        console.error("Terjadi kesalahassn:", error);
       }
 
     }
     GetDataAp()
+    
   },[token])
 
   const handleValueChange = (value) => {
@@ -200,6 +204,13 @@ function DashboardNew() {
 
   const belum_realisasi = data.Persentase_Belum_Realisasi
   const realisasi = data.Persentase_Realisasi
+
+  const belum_realisasi_TKDN_PDN = data.Persentase_Belum_PDN_TKDN
+  const realisasi_TKDN_PDN = data.Persentase_Realisasi_PDN_TKDN
+
+  const belum_realisasi_impor = data.Persentase_Belum_belanja_impor
+  const realisasi_impor = data.Persentase_Realisasi_belanja_impor
+
 
   return (
     <div style={styles.root}>
@@ -214,42 +225,48 @@ function DashboardNew() {
                 <Kolom1>
                   <Kotak2 />
                   <TulisanBox>Komitmen</TulisanBox>
-                  <Nilaibox>{data.Komitmen}</Nilaibox>
+                  <Nilaibox>{data && data.Komitmen ? data.Komitmen.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={12} sm={12} md={2}>
                 <Kolom1>
                   <Kotak2></Kotak2>
                   <TulisanBox>Realisasi</TulisanBox>
-                  <Nilaibox>{data.Realisasi}</Nilaibox>
+                  <Nilaibox>{data && data.Realisasi ? data.Realisasi.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={12} sm={12} md={2}>
                 <Kolom1>
                   <Kotak2></Kotak2>
                   <TulisanBox>Belum Realisasi</TulisanBox>
-                  <Nilaibox>{data.Belum_realisasi}</Nilaibox>
+                  <Nilaibox>{data && data.Belum_realisasi ? data.Belum_realisasi.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={12} sm={12} md={2}>
                 <Kolom1>
                   <Kotak2></Kotak2>
                   <TulisanBox>TKDN</TulisanBox>
-                  <Nilaibox>{data.TKDN}</Nilaibox>
+                  <Nilaibox>{data && data.TKDN ? data.TKDN.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={12} sm={12} md={2}>
                 <Kolom1>
                   <Kotak2></Kotak2>
                   <TulisanBox>PDN</TulisanBox>
-                  <Nilaibox>{data.PDN}</Nilaibox>
+                  <Nilaibox>{data && data.PDN ? data.PDN.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={12} sm={12} md={2}>
                 <Kolom1>
                   <Kotak2></Kotak2>
                   <TulisanBox>Import</TulisanBox>
-                  <Nilaibox>{data.Import}</Nilaibox>
+                  <Nilaibox>{data && data.Import ? data.Import.toLocaleString() : "N/A"}</Nilaibox>
+
                 </Kolom1>
               </Grid>
               <Grid item xs={4} sm={4} md={4}>
@@ -260,33 +277,32 @@ function DashboardNew() {
                 {/* Grafik Pertama */}
                 <Grid item xs={12} sm={12} md={2}>
                   <LayerGrafik1>
-                  Perbandingan Persentase Realisasi Anggaran Belanja Keseluruhan terhadap Komitmen Periode 2023
+                  Perbandingan Persentase Realisasi Anggaran Belanja Keseluruhan terhadap Komitmen Periode 2023
 
-                    <Chart1 data1={realisasi} data2={belum_realisasi}/>
+                    <Chart1 data1={realisasi} data2={belum_realisasi} selectValue={selectedValue}/>
                   </LayerGrafik1>
                 </Grid>
 
                 {/* Grafik Kedua */}
                 <Grid item xs={12} sm={12} md={2}>
                   <LayerGrafik1>
-                  Perbandingan Persentase Realisasi Anggaran PDN+TKDN terhadap Komitmen Periode 2023
+                  Perbandingan Persentase Realisasi Anggaran PDN+TKDN terhadap Komitmen Periode 2023
 
-                    <DoughnutChart />
+                  <GrafikTKDN data1={realisasi_TKDN_PDN} data2={belum_realisasi_TKDN_PDN} selectValue={selectedValue}/>
                   </LayerGrafik1>
                 </Grid>
 
                 {/* Grafik Ketiga */}
                 <Grid item xs={12} sm={12} md={2}>
                   <LayerGrafik1>
-                  Perbandingan Persentase Realisasi Anggaran Belanja Impor terhadap Komitmen Periode 2023
-
-                    <DoughnutChart />
+                  Perbandingan Persentase Realisasi Anggaran Belanja Impor terhadap Komitmen Periode 2023
+                  <GrafikImpor data1={realisasi_impor} data2={belum_realisasi_impor} selectValue={selectedValue}/>
                   </LayerGrafik1>
                 </Grid>
               </Grid>
               <Grid container style={{ marginTop: "80px" }}>
                 <Grid item xs={12} sm={12} md={50}>
-                  <DenseTable />
+                  <DenseTable data={data} />
                 </Grid>
               </Grid>
             </Grid>

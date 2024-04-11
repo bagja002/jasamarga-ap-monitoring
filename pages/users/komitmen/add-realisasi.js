@@ -57,8 +57,8 @@ function Komitmen() {
     NamaPekerjaan: "",
     JenisPekerjaan: "",
     JenisAnggaran: "",
-    KomitmenAnggaranTahunBerjalan: "",
-    nilai_kontrak_keseluruhan: "",
+    KomitmenAnggaranTahunBerjalan: 0,
+    nilai_kontrak_keseluruhan: 0,
     nilai_kontrak_tahun: "",
     nama_penyedia_barang_dan_jasa: "",
     kualifikasi_penyedia: "",
@@ -94,42 +94,6 @@ function Komitmen() {
         },
       });
 
-      const getdata = async () => {
-        try {
-          const response = await axiosInstance.get(
-            `/users/getKomitmen?is_active=1&id_kontrak=${id_kontrak}`
-          );
-            
-          if (response.data && response.data.data) {
-            const extractedData = response.data.data[0]
-            setData(extractedData);
-
-            setFormData({
-              NamaPekerjaan: extractedData.NamaPekerjaan,
-              JenisPekerjaan: extractedData.JenisPekerjaan,
-              JenisAnggaran: extractedData.JenisAnggaran,
-              KomitmenAnggaranTahunBerjalan: extractedData.KomitmenAnggaranTahunBerjalan.toString(),
-              nilai_kontrak_keseluruhan: extractedData.NilaiKontrakKeseluruhan.toString(),
-              nilai_kontrak_tahun: extractedData.NilaiKontrakTahun.toString(),
-              nama_penyedia_barang_dan_jasa:extractedData.NamaPenyediaBarangDanJasa,
-              kualifikasi_penyedia: extractedData.KualifikasiPenyedia,
-              status_pencatatan: extractedData.StatusPencatatan,
-              persentase_pdn: extractedData.PersentasePDN.toString(),
-              persentase_tkdn: extractedData.PersentaseTKDN.toString(),
-              persentase_impor: extractedData.PersentaseImpor.toString(),
-              total_bobot: extractedData.TotalBobot.toString(),
-              realisasi_waktu_mulai_kontrak: extractedData.RealisasiWaktuMulaiKontrak,
-              realisasi_waktu_berakhir_kontrak: extractedData.RealisasiWaktuBerakhirKontrak,
-              keterangan_lainnya: "",
-            });
-
-
-          }
-        } catch (error) {
-          console.error("Terjadi kesalahan:", error);
-        }
-      };
-      getdata();
     }
   }, [id_admin, namaUnit, token, navigate, id_kontrak]);
 
@@ -140,13 +104,13 @@ function Komitmen() {
       [name]: value,
     });
   };
- 
+  console.log(formData);
   const handleSubmit = (event) => {
     event.preventDefault();
 
     // Lakukan sesuatu dengan data formulir yang disubmit
 
- 
+    console.log(formData);
     const axiosInstance = axios.create({
       baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
       headers: {
@@ -156,14 +120,14 @@ function Komitmen() {
 
     const sendData = async () => {
       try {
-        const response = await axiosInstance.put(
-          `/users/update?id_kontrak=${id_kontrak}`,
+        const response = await axiosInstance.post(
+          `/users/add_realisasi`,
           formData
         );
 
         // Cek status respons, biasanya status 200 adalah sukses
         if (response.status === 200) {
-  
+
           setOpenSuccessDialog(true); // Buka dialog sukses
           
           // Handle respons sukses di sini
@@ -186,7 +150,7 @@ function Komitmen() {
 
   const handlerCloseDialog = ()=>{
     setOpenSuccessDialog(false)
-    navigate.push('realisasi-belanja')
+    navigate.push('/users/realisasi-belanja/realisasi-belanja')
   }
   return (
     <div style={styles.root}>
@@ -197,8 +161,8 @@ function Komitmen() {
 
           <div style={styles.conten}>
             <Container maxWidth="xl">
-              <Grid style={{ alignContent: "center", textAlign: "center" , fontSize:"20px", padding:"20px"}}>
-                {namaUnit}
+              <Grid style={{ alignContent: "center", textAlign: "center" }}>
+                {"Nama Unit"}
               </Grid>
 
               <form onSubmit={handleSubmit}>
@@ -254,6 +218,56 @@ function Komitmen() {
                     <FormGroup>
                       <FormControl>
                         <TextField
+                          label="Komitmen Anggaran Tahun Berjalan"
+                          type="number"
+                          name="KomitmenAnggaranTahunBerjalan"
+                          value={formData.KomitmenAnggaranTahunBerjalan}
+                          onChange={handleInputChange}
+                          InputProps={{
+                            readOnly:true,
+                          }}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                      <NumericFormat
+                          customInput={TextField}
+                          prefix="Rp. "
+                          thousandSeparator
+                          label="Nilai Kontrak Keseluruhan"
+                          name="nilai_kontrak_keseluruhan"
+                          value={
+                            formData.nilai_kontrak_keseluruhan
+                          }
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                      <NumericFormat
+                          customInput={TextField}
+                          prefix="Rp. "
+                          thousandSeparator
+                          label="Nilai Kontrak Tahun Berjalan"
+                          name="nilai_kontrak_tahun"
+                          value={
+                            formData.nilai_kontrak_tahun
+                          }
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <TextField
                           label="Nama Penyedia Barang dan Jasa"
                           name="nama_penyedia_barang_dan_jasa"
                           value={formData.nama_penyedia_barang_dan_jasa}
@@ -295,6 +309,60 @@ function Komitmen() {
                     </FormGroup>
 
                   </Grid>
+
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <TextField
+                          label="Persentase PDN"
+                          type="number"
+                          name="persentase_pdn"
+                          value={formData.persentase_pdn}
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <TextField
+                          label="Persentase TKDN"
+                          name="persentase_tkdn"
+                          type="number"
+                          value={formData.persentase_tkdn}
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <TextField
+                          label="Persentase Impor"
+                          name="persentase_impor"
+                          type="number"
+                          value={formData.persentase_impor}
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <TextField
+                          label="Total Bobot"
+                          name="total_bobot"
+                          type="number"
+                          value={formData.total_bobot}
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                 
                   <Grid item xs={6}>
                     <FormGroup>
                       <FormControl>
@@ -351,116 +419,6 @@ function Komitmen() {
                       </FormControl>
                     </FormGroup>
                   </Grid>
-                
-                  <Grid item xs={6}>
-                    <FormGroup>
-                      <FormControl>
-                      <NumericFormat
-                          customInput={TextField}
-                          prefix="Rp. "
-                          thousandSeparator
-                          label="Komitmen Anggaran Tahun Berjalan"
-                          name="KomitmenAnggaranTahunBerjalan"
-                          value={
-                            formData.KomitmenAnggaranTahunBerjalan
-                          }
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                 
-                  <Grid item xs={6}>
-                    <FormGroup>
-                      <FormControl>
-                      <NumericFormat
-                          customInput={TextField}
-                          prefix="Rp. "
-                          thousandSeparator
-                          label="Nilai Kontrak Keseluruhan"
-                          name="nilai_kontrak_keseluruhan"
-                          value={
-                            formData.nilai_kontrak_keseluruhan
-                          }
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <FormGroup>
-                      <FormControl>
-                      <NumericFormat
-                          customInput={TextField}
-                          prefix="Rp. "
-                          thousandSeparator
-                          label="Nilai Kontrak Tahun Berjalan"
-                          name="nilai_kontrak_tahun"
-                          value={
-                            formData.nilai_kontrak_tahun
-                          }
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                  
-                 
-
-                  <Grid item xs={1.5}>
-                    <FormGroup>
-                      <FormControl>
-                        <TextField
-                          label="Persentase PDN"
-                          type="number"
-                          name="persentase_pdn"
-                          value={formData.persentase_pdn}
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                  <Grid item xs={1.5}>
-                    <FormGroup>
-                      <FormControl>
-                        <TextField
-                          label="Persentase TKDN"
-                          name="persentase_tkdn"
-                          type="number"
-                          value={formData.persentase_tkdn}
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                  <Grid item xs={1.5}>
-                    <FormGroup>
-                      <FormControl>
-                        <TextField
-                          label="Persentase Impor"
-                          name="persentase_impor"
-                          type="number"
-                          value={formData.persentase_impor}
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                  <Grid item xs={1.5}>
-                    <FormGroup>
-                      <FormControl>
-                        <TextField
-                          label="Total Bobot"
-                          name="total_bobot"
-                          type="number"
-                          value={formData.total_bobot}
-                          onChange={handleInputChange}
-                        />
-                      </FormControl>
-                    </FormGroup>
-                  </Grid>
-                 
-                  
 
                   <Grid item xs={12}>
                     <FormGroup>

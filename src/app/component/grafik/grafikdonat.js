@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 
-const DoughnutChartt = ({ data1, data2 }) => {
+const DoughnutChartt = ({ data1, data2 , selectValue }) => {
   const chartRef = useRef();
   const chartInstance = useRef(null); // Menyimpan instance grafik
   
@@ -27,12 +27,29 @@ const DoughnutChartt = ({ data1, data2 }) => {
         },
         options: {
           responsive: true,
-        },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  let label = context.label || '';
+                  if (label) {
+                    label += ': ';
+                  }
+                  if (context.parsed !== null) {
+                    label += `${parseFloat(context.parsed).toFixed(2)}%`;
+                  }
+                  return label;
+                }
+              }
+            }
+          }
+        }
+        
       });
     };
 
     initChart(); // Panggil fungsi untuk menginisialisasi grafik saat komponen dimuat
-    console.log("data 1 yaitu :", data1, "dan data 2 yaitu", data2)
+   
     // Cleanup: Hancurkan grafik saat komponen dibongkar
     return () => {
       if (chartInstance.current) {
@@ -40,7 +57,7 @@ const DoughnutChartt = ({ data1, data2 }) => {
       }
     };
     
-  }, [data1, data2]);
+  }, [data1, data2, selectValue]);
 
 
   return <canvas style={{ position: "relative", left: "50px" }} ref={chartRef} />;

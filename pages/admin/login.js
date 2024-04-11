@@ -41,7 +41,7 @@ function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://127.0.0.1:4000/admin/login",
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/admin/login",
         formData
       );
       //cek jika berhasil

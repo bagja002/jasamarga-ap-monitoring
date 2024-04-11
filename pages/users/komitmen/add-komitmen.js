@@ -24,6 +24,7 @@ import {
 } from "@mui/material";
 
 import CloseIcon from "@mui/icons-material/Close";
+import { NumericFormat } from "react-number-format";
 
 const styles = {
   root: {
@@ -51,7 +52,6 @@ function Komitmen() {
   const navigate = useRouter();
   const [open, setOpen] = useState(false);
   const [severenty, setSeverenty] = useState("success");
-
 
   const [token, setToken] = useState("");
   const [data, setData] = useState("");
@@ -84,7 +84,13 @@ function Komitmen() {
     nama_pekerjaan: "",
     jenis_pekerjaan: "",
     jenis_anggaran: "",
-    komitmen_anggaran_2023: "",
+    komitmen_anggaran_thn_berjalan: "",
+    status_pencatatan: "",
+    komitmen_keseluruhan_anggaran_thn_berjalan: "",
+    status_padi: "",
+    rencana_kualifikasi_penyedia: "",
+    rencana_waktu_mulai_pekerjaan: "",
+    rencana_tahun_berakhir: "",
   });
 
   const handleInputChange = (event) => {
@@ -97,37 +103,43 @@ function Komitmen() {
 
   const handleSubmit = async () => {
     try {
+      const id_user = id_admin.toString();
+      const nama_ap = namaUnit;
       const axiosInstance = axios.create({
-        baseURL: "http://127.0.0.1:4000",
+        baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      console.log(formData);
+ 
 
       const response = await axiosInstance.post(
-        "/users/buat_komitmen",
+        //"/users/buat_komitmen",
+        "/testBuat",
         formData
       );
 
       const responseData = response.data;
-      console.log(formData);
-      console.log(responseData);
+
       setFormData({
-        id_user: "",
-        nama_ap: "",
+        id_user: id_user,
+        nama_ap: nama_ap,
         nama_pekerjaan: "",
         jenis_pekerjaan: "",
         jenis_anggaran: "",
-        komitmen_anggaran_2023: "",
+        komitmen_anggaran_thn_berjalan: "",
+        status_pencatatan: "",
+        komitmen_keseluruhan_anggaran_thn_berjalan: "",
+        status_padi: "",
+        rencana_kualifikasi_penyedia: "",
+        rencana_waktu_mulai_pekerjaan: "",
+        rencana_tahun_berakhir: "",
       });
-      
     } catch (error) {
       console.error("Terjadi kesalahan:", error);
       setSeverenty("error");
       setOpen(true);
-      
     }
   };
 
@@ -137,7 +149,6 @@ function Komitmen() {
     handleSubmit();
     setSeverenty("success");
     setOpen(true);
-
   };
 
   const handleClose = () => {
@@ -145,8 +156,7 @@ function Komitmen() {
     if (severenty === "success") {
       navigate.push("/users/komitmen/komitmen"); // Ganti dengan URL tujuan yang sesuai
     }
-  }
-  const izin = true;
+  };
 
   return (
     <div style={styles.root}>
@@ -203,9 +213,12 @@ function Komitmen() {
                           value={formData.jenis_pekerjaan}
                           onChange={handleInputChange}
                         >
-                          <MenuItem value="Option 1">Option 1</MenuItem>
-                          <MenuItem value="Option 2">Option 2</MenuItem>
-                          <MenuItem value="Option 3">Option 3</MenuItem>
+                          <MenuItem value="Barang">Barang</MenuItem>
+                          <MenuItem value="Jasa Konsultasi">
+                            Jasa Konsultasi
+                          </MenuItem>
+                          <MenuItem value="Kontruksi">Kontruksi</MenuItem>
+                          <MenuItem value="Jasa Lain">Jasa Lain</MenuItem>
                         </Select>
                       </FormControl>
                     </FormGroup>
@@ -219,9 +232,8 @@ function Komitmen() {
                           value={formData.jenis_anggaran}
                           onChange={handleInputChange}
                         >
-                          <MenuItem value="Option A">Option A</MenuItem>
-                          <MenuItem value="Option B">Option B</MenuItem>
-                          <MenuItem value="Option C">Option C</MenuItem>
+                          <MenuItem value="Opex">Opex</MenuItem>
+                          <MenuItem value="Capex">Capex</MenuItem>
                         </Select>
                       </FormControl>
                     </FormGroup>
@@ -229,15 +241,144 @@ function Komitmen() {
                   <Grid item xs={6}>
                     <FormGroup>
                       <FormControl>
-                        <TextField
-                          label="Komitmen Anggaran 2023"
-                          name="komitmen_anggaran_2023"
-                          value={formData.komitmen_anggaran_2023}
+                        <InputLabel>Status Pencatatan</InputLabel>
+                        <Select
+                          name="status_pencatatan"
+                          value={formData.status_pencatatan}
+                          onChange={handleInputChange}
+                        >
+                          <MenuItem value="TKDN">TKDN</MenuItem>
+                          <MenuItem value="PDN">PDN</MenuItem>
+                          <MenuItem value="IMPOR">IMPOR</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <InputLabel>Rencana Kualifikasi Penyedia </InputLabel>
+                        <Select
+                          name="rencana_kualifikasi_penyedia"
+                          value={formData.rencana_kualifikasi_penyedia}
+                          onChange={handleInputChange}
+                        >
+                          <MenuItem value="UMKM">UMKM</MenuItem>
+                          <MenuItem value="Non UMKM">Non UMKM</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <InputLabel>
+                          Melalui PaDi UMKM/Non PaDi UMKM{" "}
+                        </InputLabel>
+                        <Select
+                          name="status_padi"
+                          value={formData.status_padi}
+                          onChange={handleInputChange}
+                        >
+                          <MenuItem value="PaDi UMKM">PaDi UMKM</MenuItem>
+                          <MenuItem value="Non PaDi UMKM">
+                            Non PaDi UMKM
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <InputLabel>
+                          {" "}
+                          Rencana Waktu Mulai Pengerjaan Tahun{2024}{" "}
+                        </InputLabel>
+                        <Select
+                          name="rencana_waktu_mulai_pekerjaan"
+                          value={formData.rencana_waktu_mulai_pekerjaan}
+                          onChange={handleInputChange}
+                        >
+                          <MenuItem value="January">January</MenuItem>
+                          <MenuItem value="February">February</MenuItem>
+                          <MenuItem value="March">March</MenuItem>
+                          <MenuItem value="April">April</MenuItem>
+                          <MenuItem value="May">May</MenuItem>
+                          <MenuItem value="June">June</MenuItem>
+                          <MenuItem value="July">July</MenuItem>
+                          <MenuItem value="August">August</MenuItem>
+                          <MenuItem value="September">September</MenuItem>
+                          <MenuItem value="October">October</MenuItem>
+                          <MenuItem value="November">November</MenuItem>
+                          <MenuItem value="December">December</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <InputLabel>
+                          {" "}
+                          Rencana Tahun Berakhir Pekerjaan{" "}
+                        </InputLabel>
+                        <Select
+                          name="rencana_tahun_berakhir"
+                          value={formData.rencana_tahun_berakhir}
+                          onChange={handleInputChange}
+                        >
+                          <MenuItem value="2029">2029</MenuItem>
+                          <MenuItem value="2028">2028</MenuItem>
+                          <MenuItem value="2027">2027</MenuItem>
+                          <MenuItem value="2026">2026</MenuItem>
+                          <MenuItem value="2025">2025</MenuItem>
+                          <MenuItem value="2024">2024</MenuItem>
+                          <MenuItem value="2023">2023</MenuItem>
+                        </Select>
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+
+        
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <NumericFormat
+                          customInput={TextField}
+                          prefix="Rp. "
+                          thousandSeparator
+                          label="Komitmen Keseluruhan"
+                          name="komitmen_keseluruhan_anggaran_thn_berjalan"
+                          value={
+                            formData.komitmen_keseluruhan_anggaran_thn_berjalan
+                          }
                           onChange={handleInputChange}
                         />
                       </FormControl>
                     </FormGroup>
                   </Grid>
+                  
+                  <Grid item xs={6}>
+                    <FormGroup>
+                      <FormControl>
+                        <NumericFormat
+                          customInput={TextField}
+                          prefix="Rp. "
+                          thousandSeparator
+                          value={formData.komitmen_anggaran_thn_berjalan}
+                          label="Komitmen Tahun Berjalan"
+                          name="komitmen_anggaran_thn_berjalan"
+                          onChange={handleInputChange}
+                        />
+                      </FormControl>
+                    </FormGroup>
+                  </Grid>
+
+                  
+                 
 
                   <Grid item xs={12}>
                     <Button type="submit" variant="contained" color="primary">

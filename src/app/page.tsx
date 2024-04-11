@@ -1,12 +1,19 @@
 import Image from "next/image";
 import styles from "./page.module.css";
+import RootLayout from "./layout";
+
 
 
 
 export default function Home() {
   return (
+
+    <RootLayout >
+
     <main className={styles.main}>
+
       <div className={styles.description}>
+   
         <p>
           Get started by editing&nbsp;
           <code className={styles.code}>src/app/page.tsx</code>
@@ -93,5 +100,7 @@ export default function Home() {
         </a>
       </div>
     </main>
+
+    </RootLayout>
   );
 }

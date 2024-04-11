@@ -1,17 +1,22 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import { styled } from "@mui/material/styles";
 import Select from "../../src/app/component/tools/select";
-import Sidebar from "../../src/app/component/sidebarUser";
+import Sidebar from "../../src/app/component/sidebar";
 import Chart1 from "../../src/app/component/grafik/grafikdonat";
-import DoughnutChart from "../../src/app/component/grafik/grafikdonat";
-import DoughnutChart2 from "../../src/app/component/grafik/grafik3";
-import Navbar from "../../src/app/component/navbar";
+import GrafikImpor from "../../src/app/component/grafik/grafik3";
+import GrafikTKDN from "../../src/app/component/grafik/grafik2";
 import DenseTable from "../admin/dashboardres";
+import Navbar from "../../src/app/component/navbar";
 import { useRouter } from "next/router";
+
 import jwt from "jsonwebtoken";
 import axios from "axios";
+import SidebarUser from "../../src/app/component/sidebarUser";
+import FilterBulan from "../../src/app/component/tools/filter/bulan";
+import FilterTahun from "../../src/app/component/tools/filter/tahun";
+
 
 const Kolom1 = styled("div")({
   backgroundColor: `rgba(255, 255, 255, 1)`,
@@ -84,9 +89,9 @@ const LayerGrafik1 = styled("div")({
   alignItems: `flex-start`,
   padding: `0px`,
   boxSizing: `border-box`,
-  width: `250px`, // 378px / 1920px * 100%
-  height: `250px`, // 301px / 1080px * 100%
-
+  width: `400px`, // 378px / 1920px * 100%
+  height: `250px`, // 301px / 1080px * 100%\
+  textAlign:"center"
 });
 
 const styles = {
@@ -115,43 +120,100 @@ function DashboardNew() {
   const [id_admin, setId_admin] = useState(0)
   const [token, setToken] = useState("")
   const [data, setData]= useState("")
+  const route = useRouter()
+  const [dataAp, setDataAp]=useState([])
+  const {id_user} = route.query
+  const [selectedValue, setSelectedValue] = useState("");
 
-  useEffect(() => {
-    const tokenjwt = localStorage.getItem('tokenJwt');
-    setToken(tokenjwt);
+  const [filterTahun, setFilterTahun] = useState(2023)
+  const [filterBulan, setFilterBulan] = useState("")
+  const backend_url = process.env.NEXT_PUBLIC_BACKEND_URL
+
+
   
-    if (!tokenjwt) {
-      alert("Anda harus login terlebih dahulu");
-      navigate.push("login");
-    } else {
-      const decodedToken = jwt.decode(tokenjwt);
-      setId_admin(decodedToken.id_admin);
-  
-      const fetchData = async () => {
-        try {
-          const axiosInstance = axios.create({
-            baseURL: "http://127.0.0.1:4000",
-            headers: {
-              Authorization: `Bearer ${tokenjwt}`,
-            },
-          });
-  
-          const response = await axiosInstance.get("/admin/getDashboard");
-          const responseData = response.data;
-  
-          setData(responseData);
-          console.log("Data yang diambil:", responseData);
-        } catch (error) {
-          console.error("Terjadi kesalahan:", error);
-        }
-      };
-  
-      fetchData();
+ useEffect(() => {
+  const tokenjwt = localStorage.getItem("tokenJwt");
+
+  if (!tokenjwt) {
+    alert("Anda harus login terlebih dahulu");
+    navigate.push("login");
+    return; // Keluar dari useEffect jika tidak ada token
+  }
+
+  setToken(tokenjwt);
+
+  const decodedToken = jwt.decode(tokenjwt);
+  setId_admin(decodedToken.id_admin);
+
+  const fetchData = async () => {
+    try {
+      const axiosInstance = axios.create({
+        baseURL:backend_url ,
+        
+        headers: {
+          Authorization: `Bearer ${tokenjwt}`,
+        },
+      });
+
+      const id_users  = id_admin
+
+      const response = await axiosInstance.get(`/users/getDasboardap?id_users=${id_users}`)
+    
+      const responseData = response.data.data;
+      setData(responseData);
+    } catch (error) {
+      console.error("Terjadi kesalahan:", error);
+      // Tangani kesalahan di sini
     }
-  }, [navigate]);
-  
-  console.log(id_admin)
+  };
 
+  fetchData();
+}, [navigate, id_admin, backend_url]);
+
+  
+
+   //mengambil data Semua AP
+   useEffect(()=>{
+    const GetDataAp = async ()=>{
+
+      try{
+        const axiosInstance = axios.create({
+          baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const response = await axiosInstance.get('admin/all_user')
+
+        setDataAp(response.data.data.map((item) => ({
+          id: item.IdUser,
+          name: item.NamaAP,
+        })))
+
+      }catch(error){
+        console.error("Terjadi kesalahansss:", error);
+      }
+
+    }
+    GetDataAp()
+  },[token])
+
+  const handleValueChangeBulan = (value) => {
+    setFilterBulan(value);
+  };
+  const handleValueChangeThun = (value) => {
+    setFilterTahun(value);
+  };
+
+  const belum_realisasi = data.Persentase_Belum_Realisasi
+  const realisasi = data.Persentase_Realisasi
+
+  const belum_realisasi_TKDN_PDN = data.Persentase_Belum_PDN_TKDN
+  const realisasi_TKDN_PDN = data.Persentase_Realisasi_PDN_TKDN
+
+  const belum_realisasi_impor = data.Persentase_Belum_belanja_impor
+  const realisasi_impor = data.Persentase_Realisasi_belanja_impor
 
 
   return (
@@ -159,93 +221,102 @@ function DashboardNew() {
       {token ? (
         <>
         <Navbar />
-      <Sidebar />
-      <div style={styles.content1}>
-        <Container maxWidth="xl">
-          <Grid container spacing={5}>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2 />
-                <TulisanBox>Komitmen</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2></Kotak2>
-                <TulisanBox>Realisasi</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2></Kotak2>
-                <TulisanBox>Belum Realisasi</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2></Kotak2>
-                <TulisanBox>TKDN</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2></Kotak2>
-                <TulisanBox>PDN</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={12} sm={12} md={2}>
-              <Kolom1>
-                <Kotak2></Kotak2>
-                <TulisanBox>Import</TulisanBox>
-                <Nilaibox>{30000}</Nilaibox>
-              </Kolom1>
-            </Grid>
-            <Grid item xs={4} sm={4} md={4}>
-              
-            </Grid>
+        <SidebarUser />
+        <div style={styles.content1}>
+          <Container maxWidth="xl">
+            <Grid container spacing={5}>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2 />
+                  <TulisanBox>Komitmen</TulisanBox>
+                  <Nilaibox>{data && data.Komitmen ? data.Komitmen.toLocaleString() : "N/A"}</Nilaibox>
 
-           <Grid container spacing={60}>
-             {/* Grafik Pertama */}
-             <Grid item xs={12} sm={12} md={2}>
-              <LayerGrafik1>
-                TKDN 
-                <Chart1 />
-              </LayerGrafik1>
-            </Grid>
+                </Kolom1>
+              </Grid>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2></Kotak2>
+                  <TulisanBox>Realisasi</TulisanBox>
+                  <Nilaibox>{data && data.Realisasi ? data.Realisasi.toLocaleString() : "N/A"}</Nilaibox>
 
-            {/* Grafik Kedua */}
-            <Grid item xs={12} sm={12} md={2}>
-              <LayerGrafik1>
-                <DoughnutChart />
-              </LayerGrafik1>
-            </Grid>
+                </Kolom1>
+              </Grid>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2></Kotak2>
+                  <TulisanBox>Belum Realisasi</TulisanBox>
+                  <Nilaibox>{data && data.Belum_realisasi ? data.Belum_realisasi.toLocaleString() : "N/A"}</Nilaibox>
 
-            {/* Grafik Ketiga */}
-            <Grid item xs={12} sm={12} md={2}>
-              <LayerGrafik1>
+                </Kolom1>
+              </Grid>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2></Kotak2>
+                  <TulisanBox>TKDN</TulisanBox>
+                  <Nilaibox>{data && data.TKDN ? data.TKDN.toLocaleString() : "N/A"}</Nilaibox>
+
+                </Kolom1>
+              </Grid>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2></Kotak2>
+                  <TulisanBox>PDN</TulisanBox>
+                  <Nilaibox>{data && data.PDN ? data.PDN.toLocaleString() : "N/A"}</Nilaibox>
+
+                </Kolom1>
+              </Grid>
+              <Grid item xs={12} sm={12} md={2}>
+                <Kolom1>
+                  <Kotak2></Kotak2>
+                  <TulisanBox>Import</TulisanBox>
+                  <Nilaibox>{data && data.Import ? data.Import.toLocaleString() : "N/A"}</Nilaibox>
+
+                </Kolom1>
+              </Grid>
+              <Grid item xs={4} sm={4} md={4}>
+                
+              </Grid>
     
-                <DoughnutChart />
-              </LayerGrafik1>
-            </Grid>
-            
+              <Grid container spacing={60}>
+                {/* Grafik Pertama */}
+                <Grid item xs={12} sm={12} md={2}>
+                  
+                  <LayerGrafik1 >
+                  <Grid  >
+                  Perbandingan Persentase Realisasi Anggaran Belanja Keseluruhan terhadap Komitmen Periode 2023
+                  </Grid>
 
-           </Grid>
-           <Grid container style={{marginTop:"80px"}}>
-              <Grid item xs={12} sm={12} md={50}>
-                <DenseTable />
+                    <Chart1  data1={realisasi} data2={belum_realisasi} selectValue={selectedValue}/>
+                  </LayerGrafik1>
+                </Grid>
+
+                {/* Grafik Kedua */}
+                <Grid  item xs={12} sm={12} md={2}>
+                  <LayerGrafik1>
+                  Perbandingan Persentase Realisasi Anggaran PDN+TKDN terhadap Komitmen Periode 2023
+
+                  <GrafikTKDN data1={realisasi_TKDN_PDN} data2={belum_realisasi_TKDN_PDN} selectValue={selectedValue}/>
+                  </LayerGrafik1>
+                </Grid>
+
+                {/* Grafik Ketiga */}
+                <Grid  item xs={12} sm={12} md={2}>
+                  <LayerGrafik1>
+                  Perbandingan Persentase Realisasi Anggaran Belanja Impor terhadap Komitmen Periode 2023
+                  <GrafikImpor data1={realisasi_impor} data2={belum_realisasi_impor} selectValue={selectedValue}/>
+                  </LayerGrafik1>
+                </Grid>
+              </Grid>
+              <Grid container style={{ marginTop: "80px" }}>
+                <Grid item xs={12} sm={12} md={50}>
+                  <DenseTable data={data} />
+                </Grid>
               </Grid>
             </Grid>
-          </Grid>
-        </Container>
-      </div>
-
+          </Container>
+        </div>
         </>
-      ):(
+      ) : (
         <div
           style={{ backgroundColor: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)", width: "100%", height: "100vh" }}
         ></div>

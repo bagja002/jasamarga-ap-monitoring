@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,  useContext } from "react";
 import Paper from "@mui/material/Paper";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
@@ -7,8 +7,8 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TablePagination from "@mui/material/TablePagination";
 import TableRow from "@mui/material/TableRow";
-import Sidebar from "../../../src/app/component/sidebarUser";
-import Navbar from "../../../src/app/component/navbar";
+
+
 import { Button, Container, IconButton } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import DeleteIcon from "@mui/icons-material/Delete"; // Import DeleteIcon
@@ -18,6 +18,17 @@ import Link from "next/link";
 
 import jwt from "jsonwebtoken";
 import axios from "axios";
+import FilterBulan from "../../src/app/component/tools/filter/bulan";
+import FilterTahun from "../../src/app/component/tools/filter/tahun";
+
+import Sidebar from "../../src/app/component/sidebar";
+import Navbar from "../../src/app/component/navbar";
+import SelectAutoWidth from "../../src/app/component/tools/select";
+
+
+
+import { LockContext } from '../../src/app/lock';
+import Switch from '@mui/material/Switch';
 
 const styles = {
   root: {
@@ -50,18 +61,29 @@ const columns = [
   { id: "jenisPekerjaan", label: "Jenis Pekerjaan", minWidth: 170 },
   { id: "jenisAnggaran", label: "Jenis Anggaran", minWidth: 170 },
   { id: "komitmenAnggaran", label: "Komitmen Anggaran", minWidth: 170 },
+  { id: "StatusPencataan", label: "Status Pencataan", minWidth: 170 },
+  { id: "RencanaKualifikasiPednyedia", label: "Rencana Kualifikasi Penyedia", minWidth: 170 },
+  { id: "RencanaMulaiTahunPengerjaan", label: "Rencana Mulai Tahun Pekerjaan", minWidth: 170 },
+  { id: "RencanaBerakhirTahunPengerjaan", label: "Rencana Berakhir Tahun Pekerjaan", minWidth: 170 },
+
 ];
 
-function UsersPage() {
+function KomitmenPage() {
   const [page, setPage] = React.useState(0);
   const [id_admin, setId_admin] = useState(0);
   const [namaUnit, setNamaUnit] = useState();
   const [token, setToken] = useState("");
   const [data, setData] = useState([]);
+  const [selectedValue, setSelectedValue] = React.useState("");
   const [rowsPerPage, setRowsPerPage] = React.useState(10);
   const navigate = useRouter();
+  const [dataAp, setDataAp]=useState([])
 
   const [table, setTable] = useState([]);
+  
+
+  const [filterTahun, setFilterTahun] = useState(2024)
+  const [filterBulan, setFilterBulan] = useState("")
 
   useEffect(() => {
     const tokenjwt = localStorage.getItem("tokenJwt");
@@ -69,7 +91,7 @@ function UsersPage() {
 
     if (!tokenjwt) {
       alert("Anda harus login terlebih dahulu");
-      navigate.push("/users/login");
+      navigate.push("/admin/login");
     } else {
       const decodedToken = jwt.decode(tokenjwt);
       setId_admin(decodedToken.id_admin);
@@ -83,20 +105,26 @@ function UsersPage() {
 
     const getdata = async () => {
       const axiosInstance = axios.create({
-        baseURL: "http://127.0.0.1:4000",
+        baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
+      
 
       try {
-        const response = await axiosInstance.get("/users/getKomitmen");
+
+        const response = await axiosInstance.get(`/users/getKomitmen?id_user=${selectedValue}&is_active=1&bulanBuat=${filterBulan}&tahunBuat=${filterTahun}`);
         const extractedData = response.data.data.map((item) => ({
           NamaAP: item.NamaAP,
           NamaPekerjaan: item.NamaPekerjaan,
           JenisPekerjaan: item.JenisPekerjaan,
           JenisAnggaran: item.JenisAnggaran,
-          KomitmenAnggaran2023: item.KomitmenAnggaran2023,
+          KomitmenAnggaranTahunBerjalan: item.KomitmenAnggaranTahunBerjalan,
+          StatusPencataan:item.StatusPencatatan,
+          RencanaKualifikasiPenyedua:item.RencanaKualifikasiPenyedia,
+          RencanaMulaiTahunPengerjaan:item.RencanaWaktuMulaiPekerjaan,
+          RencanaBerakhirTahunPekerjaan:item.RencanaTahunBerakhir
         }));
 
         setData(extractedData);
@@ -108,9 +136,37 @@ function UsersPage() {
 
     // Bersihkan interval ketika komponen tidak lagi digunakan
     return () => clearInterval(interval);
-  }, [id_admin, namaUnit, token]);
+  }, [id_admin, namaUnit, token, filterTahun, filterBulan, selectedValue]);
 
-  console.log("Data terbaru :", data);
+  useEffect(()=>{
+    
+    const GetDataAp = async ()=>{
+
+      try{
+        const axiosInstance = axios.create({
+          baseURL: process.env.NEXT_PUBLIC_BACKEND_URL,
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const response = await axiosInstance.get('admin/all_user')
+
+      setDataAp(
+        response.data.data.map((item) => ({
+          id: item.IdUser,
+          name: item.NamaAP,
+        }))
+        )
+      }catch(error){
+        console.error("Terjadi kesalahassn:", error);
+      }
+
+    }
+    GetDataAp()
+    
+  },[token])
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
@@ -125,6 +181,24 @@ function UsersPage() {
     // Anda dapat mengimplementasikan logika sesuai kebutuhan
     navigate.push("/users/komitmen/add-komitmen");
   };
+
+  const handleValueChangeBulan = (value) => {
+    setFilterBulan(value);
+  };
+  const handleValueChangeThun = (value) => {
+    setFilterTahun(value);
+  };
+
+  const handleValueChange = (value) => {
+    setSelectedValue(value);
+  };
+
+
+
+  const handleToggle = (event) => {
+    setLock(event.target.checked);
+  };
+
 
   return (
     <div style={styles.root}>
@@ -148,9 +222,18 @@ function UsersPage() {
                   }}
                 >
                   List Pekerjaan
+                  
                 </Grid>
                 <Grid>
-                  <Button onClick={tambahRealisasi}>Tambah Komitmen</Button>
+                  <SelectAutoWidth dataAP={dataAp} onValueChange={handleValueChange}/>
+                </Grid>
+                
+                <Grid >
+                  <FilterBulan onValueChange={handleValueChangeBulan} /> 
+            
+                </Grid>
+                <Grid >
+                <FilterTahun onValueChange={handleValueChangeThun} />
                 </Grid>
                 <Paper sx={{ width: "100%", overflow: "hidden" }}>
                   <TableContainer sx={{ maxHeight: 440 }}>
@@ -180,7 +263,11 @@ function UsersPage() {
                               <TableCell>{row.NamaPekerjaan}</TableCell>
                               <TableCell>{row.JenisPekerjaan}</TableCell>
                               <TableCell>{row.JenisAnggaran}</TableCell>
-                              <TableCell>{row.KomitmenAnggaran2023}</TableCell>
+                              <TableCell>{row.KomitmenAnggaranTahunBerjalan}</TableCell>
+                              <TableCell>{row.StatusPencataan}</TableCell>
+                              <TableCell>{row.RencanaKualifikasiPenyedua}</TableCell>
+                              <TableCell>{row.RencanaMulaiTahunPengerjaan}</TableCell>
+                              <TableCell>{row.RencanaBerakhirTahunPekerjaan}</TableCell>
                             </TableRow>
                           ))}
                       </TableBody>
@@ -213,4 +300,4 @@ function UsersPage() {
   );
 }
 
-export default UsersPage;
+export default  KomitmenPage;

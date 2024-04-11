@@ -1,0 +1,234 @@
+import React, { useState } from "react";
+import { useRouter } from "next/router";
+import {
+  Container,
+  Box,
+  Grid,
+  Card,
+  Typography,
+  FormGroup,
+  FormControlLabel,
+  Button,
+  Stack,
+  Checkbox,
+  TextField,
+  Alert,
+  AlertTitle,
+} from "@mui/material";
+import JSMR from "../../src/app/component/assets/gambar1.png";
+import Image from "next/image";
+import Link from "next/link";
+import axios from "axios";
+
+
+interface FormData {
+  username: string;
+  password: string;
+}
+
+function Login() {
+  const [formData, setFormData] = useState<FormData>({
+    username: "",
+    password: "",
+  });
+  const navigate = useRouter();
+  const [error, setError] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [token, setToken] = useState<string>("");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/users/login",
+        formData
+      );
+      // Check if successful
+      if (response.status === 200) {
+        const token = response.data.token;
+        setToken(token);
+        // Save token data in localStorage
+        localStorage.setItem("tokenJwt", token);
+        const jwtToken = localStorage.getItem("tokenJwt");
+
+        if (jwtToken) {4
+          navigate.push("/users/dashboard");
+        }
+      }
+    } catch (error :any) {
+      if (error.response) {
+        setMsg(error.response.data.pesan);
+        setError(true);
+      } else {
+        alert(
+          "Terjadi kesalahan server atau jaringan. Silakan coba lagi nanti."
+        );
+      }
+    }
+
+    // Here you can add authentication logic or send data to the server.
+  };
+
+  return (
+  
+      
+    <Container maxWidth="xl">
+      <Box
+        sx={{
+          position: "relative",
+          "&:before": {
+            content: '""',
+            background:
+              "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
+            backgroundSize: "400% 400%",
+            animation: "gradient 15s ease infinite",
+            position: "absolute",
+            height: "100%",
+            width: "100%",
+            opacity: "0.4",
+          },
+        }}
+      >
+        <Grid
+          container
+          spacing={0}
+          justifyContent="center"
+          sx={{ height: "100vh" }}
+        >
+          <Grid
+            item
+            xs={12}
+            sm={12}
+            lg={4}
+            xl={3}
+            display="flex"
+            justifyContent="center"
+            alignItems="center"
+          >
+            <Card
+              elevation={4}
+              sx={{
+                padding: 4,
+                zIndex: 1,
+                width: "100%",
+                maxWidth: "500px",
+              }}
+            >
+              {error && (
+                <Alert severity="error">
+                  <AlertTitle>Error</AlertTitle>
+                  {msg}
+                </Alert>
+              )}
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <Image
+                  style={{ width: "100px", height: "100px" }}
+                  src={JSMR}
+                  alt="Ini Gmbar"
+                />
+              </Box>
+
+              <Box
+                fontWeight={600}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                Login Anak Perusahaan
+              </Box>
+              <form onSubmit={handleSubmit}>
+                <Box>
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={600}
+                    component="label"
+                    htmlFor="username"
+                    mb="5px"
+                  >
+                    Username
+                  </Typography>
+                  <TextField
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    fullWidth
+                  />
+                </Box>
+                <Box mt="25px">
+                  <Typography
+                    variant="subtitle1"
+                    fontWeight={600}
+                    component="label"
+                    htmlFor="password"
+                    mb="5px"
+                  >
+                    Password
+                  </Typography>
+                  <TextField
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    variant="outlined"
+                    fullWidth
+                  />
+                </Box>
+                <Stack
+                  justifyContent="space-between"
+                  direction="row"
+                  alignItems="center"
+                  my={2}
+                >
+                  <FormGroup>
+                    <FormControlLabel
+                      control={<Checkbox defaultChecked />}
+                      label="Remember this Device"
+                    />
+                  </FormGroup>
+                  <Typography
+                    component={Link}
+                    href="/"
+                    fontWeight="500"
+                    sx={{
+                      textDecoration: "none",
+                      color: "primary.main",
+                    }}
+                  >
+                    Forgot Password ?
+                  </Typography>
+                </Stack>
+                <Box>
+                  <Button
+                    color="primary"
+                    variant="contained"
+                    size="large"
+                    fullWidth
+                    type="submit"
+                  >
+                    Masuk
+                  </Button>
+                </Box>
+              </form>
+            </Card>
+          </Grid>
+        </Grid>
+      </Box>
+    </Container>
+
+  );
+}
+
+export default Login;

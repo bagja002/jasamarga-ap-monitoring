@@ -13,22 +13,50 @@ import {
   Checkbox,
   TextField,
   Alert,
+  Modal,
   AlertTitle,
+
 } from "@mui/material";
+import styled from "styled-components"
 import JSMR from "../../src/app/component/assets/gambar1.png";
 import Image from "next/image";
 import Link from "next/link";
 import axios from "axios";
 
-function Login() {
-  const [formData, setFormData] = useState({
+
+const StyledModal = styled(Modal)({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+});
+
+const ModalBox = styled(Box)({
+  backgroundColor: "white",
+  padding: "16px 32px",
+  borderRadius: "4px",
+  boxShadow: 24,
+  p: 4,
+  position: "relative", // Add this for positioning the checkmark
+});
+
+function Forgot() {
+  const [formData, setFormData] = useState<FormData>({
     username: "",
-    password: "",
+    email: "",
   });
-  const navigate = useRouter()
+
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalContent, setModalContent] = useState({
+    message: "",
+    success: false,
+  });
+  const navigate = useRouter();
   const [error, setError] = useState(false);
   const [msg, setMsg] = useState("");
- const [token, setToken] = useState("");
+  const [token, setToken] = useState<string>("");
+  const [newPassword, setNewPassword] = useState<string>("")
+  const [Pesan, SetPesan] = useState<string>("")
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -39,23 +67,20 @@ function Login() {
     e.preventDefault();
     try {
       const response = await axios.post(
-        "http://127.0.0.1:4000/users/login",
+        process.env.NEXT_PUBLIC_BACKEND_URL + "/users/forgetPassword",
         formData
       );
-      //cek jika berhasil
+      // Check if successful
       if (response.status === 200) {
-        const token = response.data.token;
-        setToken(token);
-        //Simpan data token di redist
+  
+        setNewPassword(response.data.NewPassword);
+        SetPesan(response.data.Pesan)
+        setModalContent({
+          message: Pesan+" Password Baru anda yaitu :" +newPassword,
+          success: true,
+        });
+        // Save token data in localStorage
 
-        localStorage.setItem("tokenJwt", token);
-        const jwtToken = localStorage.getItem("tokenJwt");
-     
-
-        if (jwtToken) {
-        
-          navigate.push("/users/dashboard");
-        }
       }
     } catch (error) {
       if (error.response) {
@@ -68,16 +93,20 @@ function Login() {
       }
     }
 
-    // Di sini Anda dapat menambahkan logika autentikasi atau pengiriman data ke server.
+    // Here you can add authentication logic or send data to the server.
   };
+
   return (
+  
+      
     <Container maxWidth="xl">
       <Box
         sx={{
           position: "relative",
           "&:before": {
             content: '""',
-            background: "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
+            background:
+              "radial-gradient(#d2f1df, #d3d7fa, #bad8f4)",
             backgroundSize: "400% 400%",
             animation: "gradient 15s ease infinite",
             position: "absolute",
@@ -105,15 +134,24 @@ function Login() {
           >
             <Card
               elevation={4}
-              sx={{ padding: 4, zIndex: 1, width: "100%", maxWidth: "500px" }}
+              sx={{
+                padding: 4,
+                zIndex: 1,
+                width: "100%",
+                maxWidth: "500px",
+              }}
             >
-               {error && (
+              {error && (
                 <Alert severity="error">
                   <AlertTitle>Error</AlertTitle>
                   {msg}
                 </Alert>
               )}
-              <Box display="flex" alignItems="center" justifyContent="center">
+              <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
                 <Image
                   style={{ width: "100px", height: "100px" }}
                   src={JSMR}
@@ -121,8 +159,14 @@ function Login() {
                 />
               </Box>
 
-              <Box fontWeight={600} display="flex" alignItems="center" justifyContent="center" >
-                Login Anak Perusahaan
+              <Box
+                fontWeight={600}
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <br/>
+                LUPA PASSWORD
               </Box>
               <form onSubmit={handleSubmit}>
                 <Box>
@@ -153,13 +197,13 @@ function Login() {
                     htmlFor="password"
                     mb="5px"
                   >
-                    Password
+                    Email
                   </Typography>
                   <TextField
                     type="password"
-                    id="password"
-                    name="password"
-                    value={formData.password}
+                    id="teks"
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
                     variant="outlined"
                     fullWidth
@@ -177,17 +221,7 @@ function Login() {
                       label="Remember this Device"
                     />
                   </FormGroup>
-                  <Typography
-                    component={Link}
-                    href="/"
-                    fontWeight="500"
-                    sx={{
-                      textDecoration: "none",
-                      color: "primary.main",
-                    }}
-                  >
-                    Forgot Password ?
-                  </Typography>
+
                 </Stack>
                 <Box>
                   <Button
@@ -205,8 +239,10 @@ function Login() {
           </Grid>
         </Grid>
       </Box>
+      
     </Container>
+
   );
 }
 
-export default Login;
+export default Forgot;

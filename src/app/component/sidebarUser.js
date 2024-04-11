@@ -6,6 +6,7 @@ import ListItemText from "@mui/material/ListItemText";
 import { styled } from "@mui/material/styles";
 
 import Link from "next/link";
+import { useRouter } from 'next/router';
 
 const Sliderbar = styled("div")({
   backgroundColor: "rgba(42, 42, 45, 1)",
@@ -65,7 +66,38 @@ const CenteredText = {
   color: "white",
 };
 
+const buttonStyle = {
+  backgroundColor: "#FF0000", // Green background
+  border: "none",
+  color: "white",
+  padding: "10px 50px",
+  textAlign: "center",
+  textDecoration: "none",
+  display: "inline-block",
+  fontSize: "16px",
+  margin: "4px 2px",
+  cursor: "pointer",
+  borderRadius: "12px",
+  boxShadow: "0 4px 8px 0 rgba(0,0,0,0.2)",
+  position: "absolute", // Fixed position
+  bottom: "100px", // 20px from the bottom
+  left: "50px"
+};
+
 const SidebarUser = () => {
+
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear localStorage or any other state storage you use
+    localStorage.clear();
+
+    // Redirect to the login page
+    router.push('/users/login');
+  };
+
+
+
   return (
     <div style={{ position: "relative", top: "100px" }}>
       <Sliderbar>
@@ -91,6 +123,7 @@ const SidebarUser = () => {
             </Link>
           </ListItem>
         </List>
+        <button style={buttonStyle} onClick={handleLogout}>Logout</button>
       </Sliderbar>
     </div>
   );
